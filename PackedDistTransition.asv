@@ -1,0 +1,37 @@
+xf = 0.2;
+xd = 0.88;
+
+R = 2;
+F = 5;
+D = 2;
+%x = 0.4;
+%yStripping(x, xf, xd, R, F, D)
+%yEnriching(x, xd, R)
+%xb(xf, xd, F, D)
+xtrans_oldest = 0.1;
+xtrans_old = 0.11;
+xb_1 = xb(xf, xd, F, D)
+enr_oldest = NTUenr(xd, xtrans_oldest, R)
+str_oldest = NTUstr(xd, xf, xtrans_oldest, xb_1, R, F, D)
+enr_old = NTUenr(xd, xtrans_old, R)
+str_old = NTUstr(xd, xtrans_old, xb_1, R, F, D)
+deltaNTU_old = enr_old - str_old;
+deltaNTU_oldest = enr_oldest - str_oldest;
+xtrans_new = 0;
+iterations = 0
+while abs(deltaNTU_old) > 0.05
+    iterations = iterations +1;
+    xtrans_new = xtrans_old + (xtrans_old - xtrans_oldest)*deltaNTU_old/(deltaNTU_old - deltaNTU_oldest)
+    xtrans_oldest = xtrans_old;
+    xtrans_old = xtrans_new;
+    enr_oldest = enr_old
+    str_oldest = str_old
+    enr_old = NTUenr(xd, xtrans_old, R);
+    str_old = NTUstr(xd, xtrans_old, xb_1, R, F, D);
+    deltaNTU_oldest = enr_oldest - str_oldest
+    deltaNTU_old = enr_old - str_old;
+    
+end
+
+
+

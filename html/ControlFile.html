@@ -1,0 +1,186 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>ControlFile</title><meta name="generator" content="MATLAB 9.0"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-01-27"><meta name="DC.source" content="ControlFile.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="comment">%Created by: Yonatan Markus</span>
+<span class="comment">%January 2018</span>
+
+<span class="comment">%Description: (1) Creating McCabe-Thiele diagrams for distillation columns.</span>
+<span class="comment">%(2) Predicting NTU (Number transfer units) for column, as well as</span>
+<span class="comment">%transition point between stripping and enriching sections (xtrans_new)</span>
+
+<span class="comment">%Necessary files:</span>
+<span class="comment">%PackedDistTransition - Main script for calculations and plotting</span>
+<span class="comment">%ControlFile - Iterating through PackedDistTransition multiple times for</span>
+<span class="comment">%different experimental column conditions</span>
+<span class="comment">%yEnriching - Equation for enriching operating line</span>
+<span class="comment">%yStripping - Equation for stripping operating line</span>
+<span class="comment">%fstar - Equation for ethanol-water equilibrium curve</span>
+<span class="comment">%xb - Predicts bottoms product mol% based on feed and distillate mole flowrates</span>
+<span class="comment">%and mol% compositions</span>
+<span class="comment">%NTUenr - Calculates NTU for enriching section</span>
+<span class="comment">%NTUstr - Calculates NTU for stripping section</span>
+
+<span class="comment">%If xb (bottoms mol%) is unknown, the file xb.m should be used to for this</span>
+<span class="comment">%prediction. To use this calculated xb value, three things must be changed:</span>
+<span class="comment">%(1) In PackedDistTransition.m, the line '%xb_1 = xb(xf, xd, F, D);' should</span>
+<span class="comment">%be uncommented.</span>
+<span class="comment">%(2) In yStripping.m, the y should be calculated with the equation that does</span>
+<span class="comment">%NOT include xb</span>
+<span class="comment">%(3) In NTUstr.m, the denominator should be calculated with the equation</span>
+<span class="comment">%that does not include xb</span>
+
+
+R0 = [1;2;2;2];
+xd0 = [0.507614127577386;0.553231955141786;0.533245620955260;0.489112310048880];
+xb0 = [0.035052914582658;0.041639839454622;0.018092661266885;0.028591682556809];
+xf0 = [0.120796375204674;0.126356594205802;0.094160010239106;0.109913867263939];
+F0 = [0.144; 0.244; 0.244; 0.244];
+D0 = [0.0405; 0.0405; 0.0405; 0.0405;];
+t = zeros(length(xf0), 1)
+<span class="keyword">for</span> i = 1:length(xf0)
+     t(i) = PackedDistTransition(xf0(i), xd0(i), xb0(i), R0(i), F0(i), D0(i), i);
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">
+t =
+
+     0
+     0
+     0
+     0
+
+Warning: The requested print was not completed because the figure is invalid.
+This may be happening because the figure was closed before the print could
+complete. 
+</pre><pre class="codeoutput error">Error using matlab.ui.Figure/get
+Invalid or deleted object.
+
+Error in alternatePrintPath&gt;LocalIsPaperPositionModeAuto (line 1311)
+          pposMode = get(pj.Handles{1}, 'PaperPositionMode');
+
+Error in alternatePrintPath&gt;LocalTryGetframeWithDecorationsShortcut (line 1465)
+   doShortcut = awtAvailable &amp;&amp; LocalIsPaperPositionModeAuto(pj) &amp;&amp; ...
+
+Error in alternatePrintPath (line 89)
+    [printDone, pj] = LocalTryGetframeWithDecorationsShortcut(pj);
+
+Error in print (line 102)
+    pj = alternatePrintPath(pj);
+
+Error in saveas (line 168)
+        print( h, name, ['-d' dev{i}] )
+
+Error in PackedDistTransition (line 40)
+saveas(figure(run_number*2-1), ['NTU Reflux: ', R, ' ', titletext2, '.png'])
+
+Error in ControlFile (line 38)
+     t(i) = PackedDistTransition(xf0(i), xd0(i), xb0(i), R0(i), F0(i), D0(i), i);
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2016a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%Created by: Yonatan Markus
+%January 2018
+
+%Description: (1) Creating McCabe-Thiele diagrams for distillation columns.
+%(2) Predicting NTU (Number transfer units) for column, as well as
+%transition point between stripping and enriching sections (xtrans_new)
+
+%Necessary files:
+%PackedDistTransition - Main script for calculations and plotting
+%ControlFile - Iterating through PackedDistTransition multiple times for
+%different experimental column conditions
+%yEnriching - Equation for enriching operating line
+%yStripping - Equation for stripping operating line
+%fstar - Equation for ethanol-water equilibrium curve
+%xb - Predicts bottoms product mol% based on feed and distillate mole flowrates
+%and mol% compositions
+%NTUenr - Calculates NTU for enriching section
+%NTUstr - Calculates NTU for stripping section
+
+%If xb (bottoms mol%) is unknown, the file xb.m should be used to for this
+%prediction. To use this calculated xb value, three things must be changed:
+%(1) In PackedDistTransition.m, the line '%xb_1 = xb(xf, xd, F, D);' should
+%be uncommented.
+%(2) In yStripping.m, the y should be calculated with the equation that does
+%NOT include xb
+%(3) In NTUstr.m, the denominator should be calculated with the equation
+%that does not include xb
+
+
+R0 = [1;2;2;2];
+xd0 = [0.507614127577386;0.553231955141786;0.533245620955260;0.489112310048880];
+xb0 = [0.035052914582658;0.041639839454622;0.018092661266885;0.028591682556809];
+xf0 = [0.120796375204674;0.126356594205802;0.094160010239106;0.109913867263939];
+F0 = [0.144; 0.244; 0.244; 0.244];
+D0 = [0.0405; 0.0405; 0.0405; 0.0405;];
+t = zeros(length(xf0), 1)
+for i = 1:length(xf0)
+     t(i) = PackedDistTransition(xf0(i), xd0(i), xb0(i), R0(i), F0(i), D0(i), i);
+end
+    
+    
+##### SOURCE END #####
+--></body></html>
